@@ -1,0 +1,112 @@
+---
+title: "HW4"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=TRUE}
+# Part 0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dat <- read.csv("/Users/jenniferjackson/Desktop/NYU/MLM/classroom.csv")
+
+# Part 1 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+require(lme4)
+require(lmerTest)
+
+lme1 <- lmer(mathgain ~ ses + minority + yearstea + (1|schoolid), data = dat)
+print(summary(lme1))
+lme1_results <- ranova(lme1)
+lme1_results
+logLik(lme1)
+```
+MODEL 1 :
+$MATHGAIN_{ijk}=b_0+b_1MATHKIND_{ijk}+b_2SES_{ijk}+b_3MINORITY_{ijk}+b_4YEARSTEA_{jk}+\zeta_{0k}+\varepsilon_{ijk} ,\mbox{ with }\zeta_{0k}\sim N(0,\sigma_\zeta^2), \varepsilon_{ijk} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+The loglikelihood is -5885.867 (df=6).
+
+```{r, echo=TRUE}
+# Part 1 (a) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lme2 <- lmer(mathgain ~ ses + minority + yearstea + (0+yearstea|schoolid) + (1|schoolid), data = dat)
+print(summary(lme2))
+lme2_results <- ranova(lme2)
+lme2_results
+logLik(lme2)
+```
+MODEL 2 :
+$MATHGAIN_{ijk}=b_0+b_1MATHKIND_{ijk}+b_2SES_{ijk}+b_3MINORITY_{ijk}+b_4YEARSTEA_{jk}+\zeta_{0k}+\zeta_{4k}YEARSTEA+\varepsilon_{ijk} ,\mbox{ with }\zeta_{0k}\sim N(0,\sigma_\zeta^2),\zeta_{4k}\sim N(0,\sigma_\zeta^2), \varepsilon_{ijk} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+The loglikelihood is -5884.919 (df=7).
+
+```{r, echo=TRUE}
+# Part 1 (b) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# LRT
+anova(lme1, lme2, refit = F)
+# the p-value is 0.1684.
+```
+Part 1 (c) and (d)
+Because the p-value (0.1684) is larger than alpha = 5%, adding the yearstea random slope is not statistically significant.
+```{r}
+# Part 2 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lme3 <- lmer(mathgain ~ ses + minority + yearstea + (yearstea|schoolid), data = dat)
+print(summary(lme3))
+lme3_results <- ranova(lme3)
+lme3_results
+logLik(lme3)
+```
+The loglikelihood of Model 3 (lme3) is -5882.26 (df=8)
+
+The model is the same. The only difference is the correlation between the zeta random effects.
+
+MODEL 3 :
+$MATHGAIN_{ijk}=b_0+b_1MATHKIND_{ijk}+b_2SES_{ijk}+b_3MINORITY_{ijk}+b_4YEARSTEA_{jk}+\zeta_{0k}+\zeta_{4k}YEARSTEA+\varepsilon_{ijk} ,\mbox{ with }\zeta_{0k}\sim N(0,\sigma_\zeta^2),\zeta_{4k}\sim N(0,\sigma_\zeta^2), \varepsilon_{ijk} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+```{r}
+# Part 2 (a) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#LRT
+anova(lme1, lme3, refit = F)
+```
+The p-value (0.02712) is less than alpha = 5%, so specifying correlation between the random effects makes for a statistically significantly better model than saying they are independent.
+```{r, echo=TRUE}
+# Part 3 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ranefs <- ranef(lme3)
+zeta0k <- ranefs$schoolid[,1]
+zeta4k <- ranefs$schoolid[,2]
+plot(zeta0k,zeta4k)
+
+
+```
+Part 3 (b) and (c)
+The estimate of the correlation between zeta0k and zeta4k is -0.78, which makes sense based on the plot above.
+```{r, echo=TRUE}
+# Part 4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# List effects for schoolids 1, 2 and 3
+
+# Model 4
+lme4 <- lmer(mathgain ~ ses + minority + yearstea + (yearstea|schoolid), data = dat[dat$schoolid < 4,])
+print(summary(lme4))
+
+ranefs_4 <- ranef(lme4)
+zeta0k_hat <- ranefs_4$schoolid[,1]
+zeta4k_hat <- ranefs_4$schoolid[,2]
+
+# zeta0k_hat for school 1 = 4.293084e-06
+# zeta0k_hat for school 2 = -4.747614e-06
+# zeta0k_hat for school 3 = 4.545298e-07
+
+# zeta4k_hat for school 1 = -3.061557e-07
+# zeta4k_hat for school 2 = 3.385699e-07
+# zeta4k_hat for school 3 = -3.241420e-08
+
+# Model 5 (for schoolid 4 only)
+lme5 <- lmer(mathgain ~ ses + minority + yearstea + (yearstea|schoolid), data = dat[dat$schoolid < 5,])
+
+ranefs_5 <- ranef(lme5)
+zeta0k_hat5 <- ranefs_5$schoolid[4,1] # -76.75355
+zeta4k_hat5 <- ranefs_5$schoolid[4,2] # 2.318757
+```
+Part 4 (b)
+The coefficient for $\hat{b}_0$ in model 3 is 55.8991 and for $\hat{b}_4$ is 0.1007.
+MODEL 6 :
+$MATHGAIN_{ijk}=\hat{b}_0+(\hat{b}_4+\hat{\zeta}_{4k})YEARSTEA_{jk}+\zeta_{0k},\mbox{ with }\zeta_{0k}\sim N(0,\sigma_\zeta^2),\zeta_{4k}\sim N(0,\sigma_\zeta^2),\mbox{ indep.}$

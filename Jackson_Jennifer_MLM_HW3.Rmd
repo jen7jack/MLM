@@ -1,0 +1,131 @@
+---
+title: "HW3"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=TRUE}
+# Part 0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dat <- read.csv("/Users/jenniferjackson/Desktop/NYU/MLM/classroom.csv")
+
+# Part 1 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+require(lme4)
+require(lmerTest)
+
+lme1 <- lmer(mathkind ~ (1|schoolid), data = dat)
+print(summary(lme1))
+lme1_results <- ranova(lme1)
+lme1_results
+logLik(lme1)
+```
+$MATHKIND_{ijk}=b_0+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\zeta_k\sim N(0,\sigma_\zeta^2), \varepsilon_{ijk} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+The loglikelihood is -6042.84 (df=3).
+
+```{r, echo=TRUE}
+# Part 1 (a) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lme2 <- lmer(mathkind ~ (1|schoolid/classid), data = dat)
+print(summary(lme2))
+lme2_results <- ranova(lme2)
+lme2_results
+logLik(lme2)
+```
+$MATHKIND_{ijk}=b_0+\eta_{jk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\eta_j\sim N(0,\sigma_\eta^2),\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ij} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+The loglikelihood is -6042.531 (df=4).
+
+```{r, echo=TRUE}
+# Part 1 (b) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+anova(lme1, lme2)
+# the p-value is 0.4.
+# Part 1 (c) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Because the p-value is greater than the alpha level (5%), we cannot say the
+# classroom-level intercept effect is statistically significant.
+```
+$MATH1ST_{ijk}=b_0+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\zeta_k\sim N(0,\sigma_\zeta^2), \varepsilon_{ijk} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+```{r}
+# Part 2 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+math1st <- dat$mathkind + dat$mathgain
+lme3 <- lmer(math1st ~ (1|schoolid), data = dat)
+print(summary(lme3))
+lme3_results <- ranova(lme3)
+lme3_results
+logLik(lme3)
+```
+The loglikelihood of model 3 (lme3) is -5975.423 (df=3)
+
+$MATH1ST_{ijk}=b_0+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ij} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+```{r}
+# Part 2 (a) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lme4 <- lmer(math1st ~ (1|schoolid/classid), data = dat)
+print(summary(lme4))
+lme4_results <- ranova(lme4)
+lme4_results
+logLik(lme4)
+```
+$MATH1ST_{ijk}=b_0+\eta_{jk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\eta_j\sim N(0,\sigma_\eta^2),\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ij} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+The loglikelihood is -5972.279 (df=4).
+```{r, echo=TRUE}
+# Part 2 (b) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+anova(lme3, lme4)
+# the p-value is 0.01223
+# Part 2 (c) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Because the p-value is less than the alpha level (5%), we can say the
+# classroom-level intercept effect is statistically significant in this model.
+# Part 3 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lme5 <- lmer(math1st ~ dat$ses + dat$sex + dat$minority + (1|schoolid), data = dat)
+print(summary(lme5))
+lme5_results <- ranova(lme5)
+lme5_results
+logLik(lme5)
+```
+The loglikelihood of model 5 (lme5) is -5923.465 (df=6).
+
+$MATH1ST_{ijk}=b_0+b_1SES_{ijk}+b_2SEX_{ijk}+b_3MINORITY_{ijk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ij} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+```{r, echo=TRUE}
+# Part 3 (b) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lme6 <- lmer(math1st ~ dat$ses + dat$sex + dat$minority + (1|schoolid/classid), data = dat)
+print(summary(lme6))
+lme6_results <- ranova(lme6)
+lme6_results
+logLik(lme6)
+```
+The loglikelihood of model 6 (lme6) is -5920.23 (df=7).
+
+$MATH1ST_{ijk}=b_0+b_1SES_{ijk}+b_2SEX_{ijk}+b_3MINORITY_{ijk}+\eta_{jk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\eta_j\sim N(0,\sigma_\eta^2),\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ij} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+```{r, echo=TRUE}
+# Part 3 (c) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+anova(lme5, lme6)
+# the p-value is 0.01076
+# Because the p-value is less than the alpha level (5%), we can say the
+# classroom-level intercept effect is statistically significant in this model.
+
+# Part 4 (a) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lme7 <- lmer(math1st ~ dat$ses + dat$sex + dat$minority + dat$yearstea + (1|schoolid/classid), data = dat)
+print(summary(lme7))
+lme7_results <- ranova(lme7)
+lme7_results
+logLik(lme7)
+anova(lme6,lme7)
+
+yt_sq <- dat$yearstea * dat$yearstea
+yt_cub <- dat$yearstea * dat$yearstea * dat$yearstea
+dat <- cbind(dat,yt_sq)
+dat <- cbind(dat, yt_cub)
+
+lme8 <- lmer(math1st ~ dat$ses + dat$sex + dat$minority + dat$yearstea + (1|schoolid/classid), data = dat)
+print(summary(lme8))
+lme8_results <- ranova(lme8)
+lme8_results
+logLik(lme8)
+anova(lme7,lme8)
+```
+
+The loglikelihood of model 6 (lme6) is -5921.287 (df=8).
+The p-value associated with this anova is 0.7828. This is larger than the alpha level (5%), therefore adding "yearstea" is not statistically significant.
+The new model, model 8, with the nonlinear predictors years squared and cubed has a p-value of 1, which shows that these two new terms are not statistically significant.

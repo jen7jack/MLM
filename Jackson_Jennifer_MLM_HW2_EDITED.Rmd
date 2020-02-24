@@ -1,0 +1,119 @@
+---
+title: "MLM HW 2"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Part 1
+```{r}
+school_data <- read.csv("/Users/jenniferjackson/Desktop/NYU/MLM/classroom.csv")
+
+require(lme4)
+require(lmerTest)
+lme1 <- lmer(mathgain ~ (1|schoolid), data = school_data)
+print(summary(lme1))
+ranova(lme1)
+```
+The log-likelihood values are -5888.3 and -5904.8.
+
+(a) The estimated variance of the school-specific random effect is 109.2 and the estimated variance of the residual is 1094.0.
+
+Part 2
+
+Adding random effects for classrooms, the model becomes $MATHGAIN_{ijk}=b_0+\eta_{jk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\eta_j\sim N(0,\sigma_\eta^2),\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ijk} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+We are assuming $\eta$ is normally distributed.
+
+```{r}
+lme2 <- lmer(mathgain ~ (1|schoolid/classid), data = school_data)
+print(summary(lme2))
+ranova(lme2)
+```
+The log-likelihood values are -5884.4, -5888.3 and -5888.3.
+
+(a) The estimated variances are $\hat{\sigma_\eta}^2=99.22,\hat{\sigma_\zeta}^2=77.50,\hat{\sigma_\epsilon}^2=1028.23$. 
+
+After adding random effects for classrooms, the estimated variance of the school-specific random effect and the estimated variance of the residual have both slightly decreased.
+
+(b) The math score gains might be classroom-driven because students in a classroom usually share the same teacher, textbook and general learning environment.
+
+Part 3
+```{r, echo=TRUE}
+lme3 <- lmer(mathgain ~ mathkind + (1|schoolid/classid), data = school_data)
+print(summary(lme3))
+ranova(lme3)
+```
+Adding mathkind, the model becomes $MATHGAIN_{ijk}=b_0+b_1MATHKIND_{ijk}+\eta_{jk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\eta_j\sim N(0,\sigma_\eta^2),\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ijk} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+The log-likelihood values are -5715.8, -5721.2 and -5723.5.
+
+(a) The coefficient of mathkind (-0.43625) has a statistically significant p-value.
+
+\colorbox{yellow}{(b) ORIGINAL ANSWER:} Because the coefficient is negative, one can say that a one unit increase in kindergarten math score (mathkind) is associated with a small decrease in mathgain. \colorbox{yellow}{EDIT:} I did not interpret the coefficient concretely enough. "mathgain" represents student progress from kindergarten to first grade. Because the coeffecient is negative, there is an indirect relationship between kindergarten score and the amount of progress gained in first grade. So kindergarteners with low math scores will gain more in first grade while kindergarteners with high math scores will gain less in first grade. After reading the solutions, I know this could be called the ceiling effect.
+
+(c) The estimated variances are $\hat{\sigma_\eta}^2=80.46,\hat{\sigma_\zeta}^2=83.49,\hat{\sigma_\epsilon}^2=756.95$. These values are smaller after having added mathkind to the model.
+
+Part 4
+```{r}
+lme4 <- lmer(mathgain ~ mathkind + ses +(1|schoolid/classid), data = school_data)
+print(summary(lme4))
+ranova(lme4)
+```
+Adding ses, the model becomes $MATHGAIN_{ijk}=b_0+b_1MATHKIND_{ijk}+b_2SES_{ijk}+\eta_{jk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\eta_j\sim N(0,\sigma_\eta^2),\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ijk} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+The log-likelihood values are -5702.6, -5707.8 and -5710.2.
+
+(a) The coefficient of ses (6.08792) has a statistically significant p-value.
+
+(b) The estimated variances are $\hat{\sigma_\eta}^2=77.54,\hat{\sigma_\zeta}^2=80.90,\hat{\sigma_\epsilon}^2=743.51$. These values are smaller after having added ses to the model.
+
+Part 5
+```{r}
+# mean ses by school
+ses_sch <- aggregate(school_data$ses, by=list(school_data$schoolid), FUN = mean)
+
+# mean ses by classroom
+ses_cls <- aggregate(school_data$ses, by=list(school_data$classid), FUN = mean)
+
+# mean mathkind by school
+mk_sch <- aggregate(school_data$mathkind, by=list(school_data$schoolid), FUN = mean)
+
+# mean mathkind by classroom
+mk_cls <- aggregate(school_data$mathkind, by=list(school_data$classid), FUN = mean)
+
+# Add 4 columns to the original data frame
+school_data$ses_sch <- NA
+school_data$ses_cls <- NA
+school_data$mk_sch <- NA
+school_data$mk_cls <- NA
+
+# Replace empty slots where the IDs match from both data frames.
+for(i in 1:nrow(school_data)){
+  school_data$ses_sch[i] <- ses_sch$x[i]
+  school_data$ses_cls[i] <- ses_cls$x[i]
+  school_data$mk_sch[i] <- mk_sch$x[i]
+  school_data$mk_cls[i] <- mk_cls$x[i]
+}
+
+# (a)
+
+lme5 <- lmer(mathgain ~ mathkind + ses + ses_sch +ses_cls + mk_sch + mk_cls + (1|schoolid/classid), data = school_data)
+print(summary(lme5))
+ranova(lme5)
+
+
+```
+
+The log-likehood values: -518.25, -518.83 and -518.98.
+
+(b)
+estimated effect of ses:      9.67649
+estimated effect of ses_sch:  1.42218
+
+(c)
+A one-unit change in ses is associated with a predicted 9.7 unit change in mathgain for a particular student.
+A one-unit change in ses_sch is associated with a predicted 1.4 unit change in mathgain for all students in a particular school.
+
+\colorbox{yellow}{(d) ORIGINAL ANSWER:} A change in ses is a change at the student level. Because ses_sch is the average ses at the school level, it does not seem necessary to hold this constant. Each student's school will have its own set ses_sch. \colorbox{yellow}{EDIT:} I think I just mis-read this question. But after reading the solutions, it makes sense that if the school is small enough, increasing one student's SES would have too large an effect on the school average SES to hold it constant. If the school is large enough though, an increase in one student's SES would not have a large enough effect on the school average SES, so a one unit increase at the student level can be interpreted while holding the school average SES constant.
+

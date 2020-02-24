@@ -1,0 +1,77 @@
+---
+title: "MLM HW 1"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Part 0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+school_data <- read.csv("/Users/jenniferjackson/Desktop/NYU/MLM/classroom.csv")
+
+# Part 1 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+require(lme4)
+require(lmerTest)
+lme1 <- lmer(mathkind ~ (1|schoolid), data = school_data)
+print(summary(lme1))
+ranova(lme1)
+```
+```{r}
+# logLikelihood Values
+# -6042.8
+# -6119.3
+
+# Part 2 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# The estimated variance in level differences between schools is 364.3.
+# The ICC is 364.3/(364.3+1344.5) = 0.21. Therefore, 21% of the variance is
+# explained by between-school differneces.
+
+# Part 3 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lme2 <- lmer(mathkind ~ ses + (1|schoolid/classid), data = school_data)
+print(summary(lme2))
+ranova(lme2)
+```
+
+Adding socioeconomic status, the model becomes $Y_{ijk}=b_0+b_1SES_{ijk}+\eta_{jk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\eta_j\sim N(0,\sigma_\eta^2),\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ij} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+Yes, the coefficient for SES (socioeconomic status) is significant because it
+has a p-value under 5%. The variance decreases once adding the SES term. It
+makes sense that the variance associated with school level would decrease
+because schools generally contain students with similar SES. E.g., schools
+in the "rich part of town", etc.
+
+```{r, echo=TRUE}
+# Part 4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+lme3 <- lmer(mathkind ~ ses + sex + minority + (1|schoolid/classid), data = school_data)
+print(summary(lme3))
+ranova(lme3)
+```
+
+After adding the covariates sex and minority, the model becomes $Y_{ijk}=b_0+b_1SES_{ijk}+b_2sex_{ijk}+b_3minority_{ijk}+\eta_{jk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\eta_j\sim N(0,\sigma_\eta^2),\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ij} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+Based on an alpha level of 5%, the coefficient for sex is not statistically significant, but the coefficient for minority is.
+
+Adding sex and minority to the model has slightly lowered the variance associated with school level. This makes sense since there are still some single-sex schools and, depending on the location, some schools are less ethnically diverse than others.
+
+```{r}
+# Part 5 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+lme4 <- lmer(mathkind ~ ses + sex + minority + housepov + (1|schoolid/classid), data = school_data)
+print(summary(lme4))
+ranova(lme4)
+```
+Adding the covariate housepov, the model becomes $Y_{ijk}=b_0+b_1SES_{ijk}+b_2sex_{ijk}+b_3minority_{ijk}+b_4housepov_{jk}+\eta_{jk}+\zeta_k+\varepsilon_{ijk} ,\mbox{ with }\eta_{jk}\sim N(0,\sigma_\eta^2),\zeta_j\sim N(0,\sigma_\zeta^2), \varepsilon_{ij} \sim N(0,\sigma_\varepsilon^2),\mbox{ indep.}$
+
+At the alpha level of 5%, the coefficient for housepov is not statistically significant.
+
+After adding housepov, the school-level variance has slightly decreased. 
+
+Part 6
+A student-level predictor's effect on school-level variance would be explained as a within-group difference, whereas a school-level predictor's effect, being on the same level as the variance in question, would be explained as a between-group difference.
+
+
+
+
